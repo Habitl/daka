@@ -32,9 +32,17 @@
             .pulse-animation {
                 animation: pulse 2s infinite;
             }
+            .dropdown-menu {
+                transform-origin: top center;
+                animation: dropdown 0.2s ease-out;
+            }
             @keyframes pulse {
                 0%, 100% { opacity: 1; }
                 50% { opacity: 0.7; }
+            }
+            @keyframes dropdown {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
             }
         }
     </style>
@@ -80,14 +88,10 @@
             <h2 class="text-xl font-bold text-dark mb-4">
                 <i class="fa fa-calendar-check-o text-primary mr-2"></i>今日统计
             </h2>
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div class="bg-blue-50 rounded-xl p-4 text-center">
-                    <div class="text-3xl font-bold text-primary" id="todayWorkTime">0h 0m</div>
+                    <div class="text-3xl font-bold text-primary" id="todayWorkTime">0h 0m 0s</div>
                     <div class="text-sm text-gray-500 mt-1">工作时长</div>
-                </div>
-                <div class="bg-green-50 rounded-xl p-4 text-center">
-                    <div class="text-3xl font-bold text-success" id="todayClockCount">0</div>
-                    <div class="text-sm text-gray-500 mt-1">打卡次数</div>
                 </div>
                 <div class="bg-orange-50 rounded-xl p-4 text-center">
                     <div class="text-3xl font-bold text-warning" id="todayOnWork">未上班</div>
@@ -96,44 +100,68 @@
             </div>
         </div>
 
-        <!-- 周/月统计 -->
-        <div class="grid grid-cols-2 gap-6 mb-6">
-            <div class="bg-white rounded-2xl card-shadow p-6">
-                <h2 class="text-lg font-bold text-dark mb-4">
-                    <i class="fa fa-calendar text-success mr-2"></i>本周统计
+        <!-- 周统计（带历史选择） -->
+        <div class="bg-white rounded-2xl card-shadow p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-dark">
+                    <i class="fa fa-calendar text-success mr-2"></i>周统计
                 </h2>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">上班天数</span>
-                        <span class="font-bold text-success text-xl" id="weekWorkDays">0 天</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">总工时</span>
-                        <span class="font-bold text-dark" id="weekTotalHours">0h 0m</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">日均工时</span>
-                        <span class="font-bold text-primary" id="weekAvgHours">0h 0m</span>
-                    </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="changeWeek(-1)" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all">
+                        <i class="fa fa-chevron-left text-gray-600"></i>
+                    </button>
+                    <span id="weekRangeDisplay" class="text-sm text-gray-600 font-medium min-w-[180px] text-center"></span>
+                    <button onclick="changeWeek(1)" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all">
+                        <i class="fa fa-chevron-right text-gray-600"></i>
+                    </button>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl card-shadow p-6">
-                <h2 class="text-lg font-bold text-dark mb-4">
-                    <i class="fa fa-calendar text-warning mr-2"></i>本月统计
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">上班天数</span>
+                    <span class="font-bold text-success text-xl" id="weekWorkDays">0 天</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">总工时</span>
+                    <span class="font-bold text-dark" id="weekTotalHours">0h 0m 0s</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">日均工时</span>
+                    <span class="font-bold text-primary" id="weekAvgHours">0h 0m 0s</span>
+                </div>
+            </div>
+            <!-- 周每日详情 -->
+            <div id="weekDailyDetails" class="mt-4 pt-4 border-t border-gray-100"></div>
+        </div>
+
+        <!-- 月统计（带历史选择） -->
+        <div class="bg-white rounded-2xl card-shadow p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-dark">
+                    <i class="fa fa-calendar text-warning mr-2"></i>月统计
                 </h2>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">上班天数</span>
-                        <span class="font-bold text-warning text-xl" id="monthWorkDays">0 天</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">总工时</span>
-                        <span class="font-bold text-dark" id="monthTotalHours">0h 0m</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">日均工时</span>
-                        <span class="font-bold text-primary" id="monthAvgHours">0h 0m</span>
-                    </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all">
+                        <i class="fa fa-chevron-left text-gray-600"></i>
+                    </button>
+                    <span id="monthDisplay" class="text-sm text-gray-600 font-medium min-w-[100px] text-center"></span>
+                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-all">
+                        <i class="fa fa-chevron-right text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">上班天数</span>
+                    <span class="font-bold text-warning text-xl" id="monthWorkDays">0 天</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">总工时</span>
+                    <span class="font-bold text-dark" id="monthTotalHours">0h 0m 0s</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">日均工时</span>
+                    <span class="font-bold text-primary" id="monthAvgHours">0h 0m 0s</span>
                 </div>
             </div>
         </div>
@@ -149,10 +177,28 @@
         </div>
 
         <!-- 操作按钮 -->
-        <div class="flex gap-4 justify-center">
-            <button onclick="exportData()" class="px-6 py-3 bg-white text-primary rounded-xl card-shadow hover:bg-gray-50 transition-all">
-                <i class="fa fa-download mr-2"></i>导出数据
-            </button>
+        <div class="flex gap-4 justify-center relative">
+            <!-- 导出下拉菜单 -->
+            <div class="relative">
+                <button onclick="toggleExportMenu()" class="px-6 py-3 bg-white text-primary rounded-xl card-shadow hover:bg-gray-50 transition-all flex items-center">
+                    <i class="fa fa-download mr-2"></i>导出数据
+                    <i class="fa fa-chevron-down ml-2 text-xs"></i>
+                </button>
+                <div id="exportMenu" class="hidden absolute top-full left-0 mt-2 w-48 bg-white rounded-xl card-shadow z-10 overflow-hidden dropdown-menu">
+                    <button onclick="exportJSON()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-all flex items-center">
+                        <i class="fa fa-file-code-o text-gray-500 w-6"></i>
+                        <span>导出 JSON</span>
+                    </button>
+                    <button onclick="exportTXT()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-all flex items-center">
+                        <i class="fa fa-file-text-o text-gray-500 w-6"></i>
+                        <span>导出 TXT</span>
+                    </button>
+                    <button onclick="exportCSV()" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-all flex items-center">
+                        <i class="fa fa-file-excel-o text-green-500 w-6"></i>
+                        <span>导出 CSV (Excel)</span>
+                    </button>
+                </div>
+            </div>
             <button onclick="clearAllData()" class="px-6 py-3 bg-white text-danger rounded-xl card-shadow hover:bg-gray-50 transition-all">
                 <i class="fa fa-trash mr-2"></i>清空数据
             </button>
@@ -171,6 +217,8 @@
         // 全局状态
         let isWorking = false;
         let records = {};
+        let selectedWeekOffset = 0;
+        let selectedMonthOffset = 0;
 
         // 初始化
         function init() {
@@ -217,30 +265,44 @@
             return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         }
 
-        // 获取本周日期范围
-        function getWeekRange() {
+        // 获取指定偏移的周日期范围
+        function getWeekRange(offset = 0) {
             const now = new Date();
+            now.setDate(now.getDate() + offset * 7);
             const day = now.getDay();
             const diff = now.getDate() - day + (day === 0 ? -6 : 1);
             const monday = new Date(now.setDate(diff));
             const sunday = new Date(monday);
             sunday.setDate(monday.getDate() + 6);
-            return { start: monday, end: sunday };
+            return { start: monday, end: sunday, offset };
         }
 
-        // 获取本月日期范围
-        function getMonthRange() {
+        // 获取指定偏移的月日期范围
+        function getMonthRange(offset = 0) {
             const now = new Date();
+            now.setMonth(now.getMonth() + offset);
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
             const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            return { start: firstDay, end: lastDay };
+            return { start: firstDay, end: lastDay, year: now.getFullYear(), month: now.getMonth() + 1 };
+        }
+
+        // 切换周
+        function changeWeek(delta) {
+            selectedWeekOffset += delta;
+            updateWeekStats();
+        }
+
+        // 切换月
+        function changeMonth(delta) {
+            selectedMonthOffset += delta;
+            updateMonthStats();
         }
 
         // 切换打卡状态
         function toggleClock() {
             const today = getTodayKey();
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
             if (!records[today]) {
                 records[today] = [];
@@ -257,34 +319,36 @@
             updateUI();
         }
 
-        // 计算某天工作时长（分钟）
+        // 计算某天工作时长（秒）
         function calculateDayWorkTime(dateKey) {
             const dayRecords = records[dateKey] || [];
-            let totalMinutes = 0;
+            let totalSeconds = 0;
             let lastOnTime = null;
+            const isToday = dateKey === getTodayKey();
 
             for (const record of dayRecords) {
                 if (record.type === 'on') {
                     lastOnTime = record.timestamp;
                 } else if (record.type === 'off' && lastOnTime) {
-                    totalMinutes += (record.timestamp - lastOnTime) / (1000 * 60);
+                    totalSeconds += (record.timestamp - lastOnTime) / 1000;
                     lastOnTime = null;
                 }
             }
 
-            // 如果还在上班中，计算到当前时间
-            if (lastOnTime && isWorking) {
-                totalMinutes += (Date.now() - lastOnTime) / (1000 * 60);
+            // 如果还在上班中且是今天，计算到当前时间
+            if (lastOnTime && isWorking && isToday) {
+                totalSeconds += (Date.now() - lastOnTime) / 1000;
             }
 
-            return Math.round(totalMinutes);
+            return Math.round(totalSeconds);
         }
 
-        // 格式化分钟为 小时分钟
-        function formatMinutes(minutes) {
-            const h = Math.floor(minutes / 60);
-            const m = Math.round(minutes % 60);
-            return `${h}h ${m}m`;
+        // 格式化秒为 小时分钟秒
+        function formatSeconds(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.round(seconds % 60);
+            return `${h}h ${m}m ${s}s`;
         }
 
         // 更新UI
@@ -319,10 +383,9 @@
                 document.getElementById('todayOnWork').textContent = todayRecords.length > 0 ? '已下班' : '未上班';
             }
 
-            // 更新今日统计
-            const todayMinutes = calculateDayWorkTime(today);
-            document.getElementById('todayWorkTime').textContent = formatMinutes(todayMinutes);
-            document.getElementById('todayClockCount').textContent = todayRecords.length;
+            // 更新今日统计（秒级）
+            const todaySeconds = calculateDayWorkTime(today);
+            document.getElementById('todayWorkTime').textContent = formatSeconds(todaySeconds);
 
             // 更新今日记录列表
             const recordsContainer = document.getElementById('todayRecords');
@@ -351,44 +414,88 @@
 
         // 更新周统计
         function updateWeekStats() {
-            const { start, end } = getWeekRange();
+            const { start, end } = getWeekRange(selectedWeekOffset);
+            
+            // 显示周范围
+            const startStr = `${start.getMonth() + 1}/${start.getDate()}`;
+            const endStr = `${end.getMonth() + 1}/${end.getDate()}`;
+            document.getElementById('weekRangeDisplay').textContent = `${startStr} - ${endStr}`;
+
             let workDays = 0;
-            let totalMinutes = 0;
+            let totalSeconds = 0;
+            let dailyDetails = [];
 
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                 const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const daySeconds = calculateDayWorkTime(dateKey);
                 if (records[dateKey] && records[dateKey].length > 0) {
                     workDays++;
-                    totalMinutes += calculateDayWorkTime(dateKey);
+                    totalSeconds += daySeconds;
                 }
+                dailyDetails.push({
+                    date: `${d.getMonth() + 1}/${d.getDate()}`,
+                    weekday: ['日', '一', '二', '三', '四', '五', '六'][d.getDay()],
+                    seconds: daySeconds,
+                    hasRecord: records[dateKey] && records[dateKey].length > 0
+                });
             }
 
             document.getElementById('weekWorkDays').textContent = `${workDays} 天`;
-            document.getElementById('weekTotalHours').textContent = formatMinutes(totalMinutes);
-            document.getElementById('weekAvgHours').textContent = workDays > 0 ? formatMinutes(Math.round(totalMinutes / workDays)) : '0h 0m';
+            document.getElementById('weekTotalHours').textContent = formatSeconds(totalSeconds);
+            document.getElementById('weekAvgHours').textContent = workDays > 0 ? formatSeconds(Math.round(totalSeconds / workDays)) : '0h 0m 0s';
+
+            // 显示周每日详情
+            document.getElementById('weekDailyDetails').innerHTML = `
+                <div class="grid grid-cols-7 gap-1 text-center text-xs">
+                    ${dailyDetails.map(d => `
+                        <div class="p-2 rounded-lg ${d.hasRecord ? 'bg-green-50' : 'bg-gray-50'}">
+                            <div class="text-gray-500 mb-1">周${d.weekday}</div>
+                            <div class="font-medium ${d.hasRecord ? 'text-success' : 'text-gray-400'}">${d.date}</div>
+                            <div class="mt-1 ${d.hasRecord ? 'text-dark' : 'text-gray-300'}">${d.hasRecord ? formatSeconds(d.seconds).replace(/ /g, '') : '-'}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
         // 更新月统计
         function updateMonthStats() {
-            const { start, end } = getMonthRange();
+            const { start, end, year, month } = getMonthRange(selectedMonthOffset);
+            
+            document.getElementById('monthDisplay').textContent = `${year}年${month}月`;
+
             let workDays = 0;
-            let totalMinutes = 0;
+            let totalSeconds = 0;
 
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                 const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 if (records[dateKey] && records[dateKey].length > 0) {
                     workDays++;
-                    totalMinutes += calculateDayWorkTime(dateKey);
+                    totalSeconds += calculateDayWorkTime(dateKey);
                 }
             }
 
             document.getElementById('monthWorkDays').textContent = `${workDays} 天`;
-            document.getElementById('monthTotalHours').textContent = formatMinutes(totalMinutes);
-            document.getElementById('monthAvgHours').textContent = workDays > 0 ? formatMinutes(Math.round(totalMinutes / workDays)) : '0h 0m';
+            document.getElementById('monthTotalHours').textContent = formatSeconds(totalSeconds);
+            document.getElementById('monthAvgHours').textContent = workDays > 0 ? formatSeconds(Math.round(totalSeconds / workDays)) : '0h 0m 0s';
         }
 
-        // 导出数据
-        function exportData() {
+        // 切换导出菜单
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // 点击外部关闭菜单
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('exportMenu');
+            if (!e.target.closest('.relative') && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // 导出 JSON
+        function exportJSON() {
             const dataStr = JSON.stringify(records, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -397,6 +504,57 @@
             a.download = `打卡记录_${getTodayKey()}.json`;
             a.click();
             URL.revokeObjectURL(url);
+            document.getElementById('exportMenu').classList.add('hidden');
+        }
+
+        // 导出 TXT
+        function exportTXT() {
+            let content = '打卡考勤记录\n';
+            content += '=' .repeat(50) + '\n\n';
+            
+            const dates = Object.keys(records).sort();
+            for (const date of dates) {
+                content += `【${date}】\n`;
+                const dayRecords = records[date];
+                for (const r of dayRecords) {
+                    content += `  ${r.type === 'on' ? '上班' : '下班'} ${r.time}\n`;
+                }
+                content += `  工作时长: ${formatSeconds(calculateDayWorkTime(date))}\n\n`;
+            }
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `打卡记录_${getTodayKey()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            document.getElementById('exportMenu').classList.add('hidden');
+        }
+
+        // 导出 CSV (Excel)
+        function exportCSV() {
+            let csv = '日期,打卡类型,时间,当日工作时长\n';
+            
+            const dates = Object.keys(records).sort();
+            for (const date of dates) {
+                const dayRecords = records[date];
+                const dayTime = formatSeconds(calculateDayWorkTime(date));
+                for (let i = 0; i < dayRecords.length; i++) {
+                    const r = dayRecords[i];
+                    csv += `${date},${r.type === 'on' ? '上班' : '下班'},${r.time},${i === 0 ? dayTime : ''}\n`;
+                }
+            }
+
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `打卡记录_${getTodayKey()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            document.getElementById('exportMenu').classList.add('hidden');
         }
 
         // 清空数据
@@ -404,18 +562,20 @@
             if (confirm('确定要清空所有打卡数据吗？此操作不可恢复！')) {
                 records = {};
                 isWorking = false;
+                selectedWeekOffset = 0;
+                selectedMonthOffset = 0;
                 saveData();
                 updateUI();
                 alert('数据已清空');
             }
         }
 
-        // 每秒更新一次工时（上班中实时计算）
+        // 每秒更新一次工时（上班中实时计算，精确到秒）
         setInterval(() => {
             if (isWorking) {
                 const today = getTodayKey();
-                const todayMinutes = calculateDayWorkTime(today);
-                document.getElementById('todayWorkTime').textContent = formatMinutes(todayMinutes);
+                const todaySeconds = calculateDayWorkTime(today);
+                document.getElementById('todayWorkTime').textContent = formatSeconds(todaySeconds);
             }
         }, 1000);
 
