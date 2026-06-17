@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能打卡考勤工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        dark: '#1F2937',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .btn-press {
+                transform: scale(0.98);
+            }
+            .pulse-animation {
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <!-- 头部 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-dark mb-2">
+                <i class="fa fa-clock-o text-primary mr-2"></i>智能打卡考勤工具
+            </h1>
+            <p class="text-gray-500">无限次上下班打卡 · 自动统计工时 · 数据永久保存</p>
+        </div>
+
+        <!-- 当前时间与状态 -->
+        <div class="bg-white rounded-2xl card-shadow p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <div id="currentDate" class="text-lg text-gray-600"></div>
+                    <div id="currentTime" class="text-4xl font-bold text-dark"></div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-500 mb-1">当前状态</div>
+                    <div id="statusBadge" class="px-4 py-2 rounded-full text-white font-medium bg-gray-400">
+                        未开始
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 打卡按钮 -->
+        <div class="bg-white rounded-2xl card-shadow p-8 mb-6 text-center">
+            <button id="clockBtn" onclick="toggleClock()" 
+                class="w-48 h-48 rounded-full text-white text-2xl font-bold transition-all duration-300 hover:opacity-90 active:btn-press bg-primary pulse-animation">
+                <i class="fa fa-play-circle-o text-4xl block mb-2"></i>
+                上班打卡
+            </button>
+            <p id="btnHint" class="mt-4 text-gray-500">点击开始今日工作</p>
+        </div>
+
+        <!-- 今日统计 -->
+        <div class="bg-white rounded-2xl card-shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-dark mb-4">
+                <i class="fa fa-calendar-check-o text-primary mr-2"></i>今日统计
+            </h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-blue-50 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-bold text-primary" id="todayWorkTime">0h 0m</div>
+                    <div class="text-sm text-gray-500 mt-1">工作时长</div>
+                </div>
+                <div class="bg-green-50 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-bold text-success" id="todayClockCount">0</div>
+                    <div class="text-sm text-gray-500 mt-1">打卡次数</div>
+                </div>
+                <div class="bg-orange-50 rounded-xl p-4 text-center">
+                    <div class="text-3xl font-bold text-warning" id="todayOnWork">未上班</div>
+                    <div class="text-sm text-gray-500 mt-1">当前状态</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 周/月统计 -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-2xl card-shadow p-6">
+                <h2 class="text-lg font-bold text-dark mb-4">
+                    <i class="fa fa-calendar text-success mr-2"></i>本周统计
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">上班天数</span>
+                        <span class="font-bold text-success text-xl" id="weekWorkDays">0 天</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">总工时</span>
+                        <span class="font-bold text-dark" id="weekTotalHours">0h 0m</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">日均工时</span>
+                        <span class="font-bold text-primary" id="weekAvgHours">0h 0m</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl card-shadow p-6">
+                <h2 class="text-lg font-bold text-dark mb-4">
+                    <i class="fa fa-calendar text-warning mr-2"></i>本月统计
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">上班天数</span>
+                        <span class="font-bold text-warning text-xl" id="monthWorkDays">0 天</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">总工时</span>
+                        <span class="font-bold text-dark" id="monthTotalHours">0h 0m</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">日均工时</span>
+                        <span class="font-bold text-primary" id="monthAvgHours">0h 0m</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 今日打卡记录 -->
+        <div class="bg-white rounded-2xl card-shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-dark mb-4">
+                <i class="fa fa-list-ul text-primary mr-2"></i>今日打卡记录
+            </h2>
+            <div id="todayRecords" class="space-y-2">
+                <div class="text-gray-400 text-center py-8">暂无打卡记录</div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="flex gap-4 justify-center">
+            <button onclick="exportData()" class="px-6 py-3 bg-white text-primary rounded-xl card-shadow hover:bg-gray-50 transition-all">
+                <i class="fa fa-download mr-2"></i>导出数据
+            </button>
+            <button onclick="clearAllData()" class="px-6 py-3 bg-white text-danger rounded-xl card-shadow hover:bg-gray-50 transition-all">
+                <i class="fa fa-trash mr-2"></i>清空数据
+            </button>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="text-center mt-8 text-gray-400 text-sm">
+            <i class="fa fa-shield mr-1"></i>数据已自动保存到本地，刷新不丢失
+        </div>
+    </div>
+
+    <script>
+        // 数据存储键名
+        const STORAGE_KEY = 'clock_in_records';
+        
+        // 全局状态
+        let isWorking = false;
+        let records = {};
+
+        // 初始化
+        function init() {
+            loadData();
+            updateTime();
+            setInterval(updateTime, 1000);
+            updateUI();
+        }
+
+        // 更新时间显示
+        function updateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('zh-CN', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+            });
+            const timeStr = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            document.getElementById('currentDate').textContent = dateStr;
+            document.getElementById('currentTime').textContent = timeStr;
+        }
+
+        // 加载数据
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                records = JSON.parse(saved);
+            }
+        }
+
+        // 保存数据
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        }
+
+        // 获取今日日期键
+        function getTodayKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        // 获取本周日期范围
+        function getWeekRange() {
+            const now = new Date();
+            const day = now.getDay();
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(now.setDate(diff));
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            return { start: monday, end: sunday };
+        }
+
+        // 获取本月日期范围
+        function getMonthRange() {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            return { start: firstDay, end: lastDay };
+        }
+
+        // 切换打卡状态
+        function toggleClock() {
+            const today = getTodayKey();
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+            if (!records[today]) {
+                records[today] = [];
+            }
+
+            records[today].push({
+                time: timeStr,
+                timestamp: now.getTime(),
+                type: isWorking ? 'off' : 'on'
+            });
+
+            isWorking = !isWorking;
+            saveData();
+            updateUI();
+        }
+
+        // 计算某天工作时长（分钟）
+        function calculateDayWorkTime(dateKey) {
+            const dayRecords = records[dateKey] || [];
+            let totalMinutes = 0;
+            let lastOnTime = null;
+
+            for (const record of dayRecords) {
+                if (record.type === 'on') {
+                    lastOnTime = record.timestamp;
+                } else if (record.type === 'off' && lastOnTime) {
+                    totalMinutes += (record.timestamp - lastOnTime) / (1000 * 60);
+                    lastOnTime = null;
+                }
+            }
+
+            // 如果还在上班中，计算到当前时间
+            if (lastOnTime && isWorking) {
+                totalMinutes += (Date.now() - lastOnTime) / (1000 * 60);
+            }
+
+            return Math.round(totalMinutes);
+        }
+
+        // 格式化分钟为 小时分钟
+        function formatMinutes(minutes) {
+            const h = Math.floor(minutes / 60);
+            const m = Math.round(minutes % 60);
+            return `${h}h ${m}m`;
+        }
+
+        // 更新UI
+        function updateUI() {
+            const today = getTodayKey();
+            const todayRecords = records[today] || [];
+
+            // 更新按钮状态
+            const btn = document.getElementById('clockBtn');
+            const hint = document.getElementById('btnHint');
+            const badge = document.getElementById('statusBadge');
+
+            // 判断当前状态（根据最后一条记录）
+            if (todayRecords.length > 0) {
+                const lastRecord = todayRecords[todayRecords.length - 1];
+                isWorking = lastRecord.type === 'on';
+            }
+
+            if (isWorking) {
+                btn.className = 'w-48 h-48 rounded-full text-white text-2xl font-bold transition-all duration-300 hover:opacity-90 active:btn-press bg-danger';
+                btn.innerHTML = '<i class="fa fa-stop-circle-o text-4xl block mb-2"></i>下班打卡';
+                hint.textContent = '工作中... 点击结束本次工作';
+                badge.className = 'px-4 py-2 rounded-full text-white font-medium bg-success';
+                badge.textContent = '工作中';
+                document.getElementById('todayOnWork').textContent = '上班中';
+            } else {
+                btn.className = 'w-48 h-48 rounded-full text-white text-2xl font-bold transition-all duration-300 hover:opacity-90 active:btn-press bg-primary pulse-animation';
+                btn.innerHTML = '<i class="fa fa-play-circle-o text-4xl block mb-2"></i>上班打卡';
+                hint.textContent = todayRecords.length > 0 ? '休息中... 点击开始新的工作时段' : '点击开始今日工作';
+                badge.className = 'px-4 py-2 rounded-full text-white font-medium bg-gray-400';
+                badge.textContent = todayRecords.length > 0 ? '休息中' : '未开始';
+                document.getElementById('todayOnWork').textContent = todayRecords.length > 0 ? '已下班' : '未上班';
+            }
+
+            // 更新今日统计
+            const todayMinutes = calculateDayWorkTime(today);
+            document.getElementById('todayWorkTime').textContent = formatMinutes(todayMinutes);
+            document.getElementById('todayClockCount').textContent = todayRecords.length;
+
+            // 更新今日记录列表
+            const recordsContainer = document.getElementById('todayRecords');
+            if (todayRecords.length === 0) {
+                recordsContainer.innerHTML = '<div class="text-gray-400 text-center py-8">暂无打卡记录</div>';
+            } else {
+                recordsContainer.innerHTML = todayRecords.map((r, i) => `
+                    <div class="flex items-center justify-between p-3 rounded-lg ${r.type === 'on' ? 'bg-green-50' : 'bg-red-50'}">
+                        <div class="flex items-center">
+                            <span class="w-8 h-8 rounded-full flex items-center justify-center ${r.type === 'on' ? 'bg-success text-white' : 'bg-danger text-white'} mr-3">
+                                <i class="fa fa-${r.type === 'on' ? 'sign-in' : 'sign-out'}"></i>
+                            </span>
+                            <span class="font-medium">${r.type === 'on' ? '上班打卡' : '下班打卡'}</span>
+                        </div>
+                        <span class="text-gray-600 font-mono">${r.time}</span>
+                    </div>
+                `).join('');
+            }
+
+            // 更新周统计
+            updateWeekStats();
+
+            // 更新月统计
+            updateMonthStats();
+        }
+
+        // 更新周统计
+        function updateWeekStats() {
+            const { start, end } = getWeekRange();
+            let workDays = 0;
+            let totalMinutes = 0;
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                if (records[dateKey] && records[dateKey].length > 0) {
+                    workDays++;
+                    totalMinutes += calculateDayWorkTime(dateKey);
+                }
+            }
+
+            document.getElementById('weekWorkDays').textContent = `${workDays} 天`;
+            document.getElementById('weekTotalHours').textContent = formatMinutes(totalMinutes);
+            document.getElementById('weekAvgHours').textContent = workDays > 0 ? formatMinutes(Math.round(totalMinutes / workDays)) : '0h 0m';
+        }
+
+        // 更新月统计
+        function updateMonthStats() {
+            const { start, end } = getMonthRange();
+            let workDays = 0;
+            let totalMinutes = 0;
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                if (records[dateKey] && records[dateKey].length > 0) {
+                    workDays++;
+                    totalMinutes += calculateDayWorkTime(dateKey);
+                }
+            }
+
+            document.getElementById('monthWorkDays').textContent = `${workDays} 天`;
+            document.getElementById('monthTotalHours').textContent = formatMinutes(totalMinutes);
+            document.getElementById('monthAvgHours').textContent = workDays > 0 ? formatMinutes(Math.round(totalMinutes / workDays)) : '0h 0m';
+        }
+
+        // 导出数据
+        function exportData() {
+            const dataStr = JSON.stringify(records, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `打卡记录_${getTodayKey()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 清空数据
+        function clearAllData() {
+            if (confirm('确定要清空所有打卡数据吗？此操作不可恢复！')) {
+                records = {};
+                isWorking = false;
+                saveData();
+                updateUI();
+                alert('数据已清空');
+            }
+        }
+
+        // 每秒更新一次工时（上班中实时计算）
+        setInterval(() => {
+            if (isWorking) {
+                const today = getTodayKey();
+                const todayMinutes = calculateDayWorkTime(today);
+                document.getElementById('todayWorkTime').textContent = formatMinutes(todayMinutes);
+            }
+        }, 1000);
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>
